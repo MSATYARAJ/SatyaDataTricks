@@ -5,6 +5,23 @@ import io
 import zipfile
 import sqlite3
 
+import streamlit as st
+
+st.title("LinkLab")
+st.subheader("The science of seamless data")
+
+st.markdown("""
+### Master Your Data Complexity
+At **LinkLab**, we turn fragmented datasets into a single source of truth. 
+Our specialized environment provides the tools you need to:
+*   **Append** missing information seamlessly.
+*   **Merge** disparate sources with ease.
+*   **Compare** data with high-precision logic.
+""")
+
+
+
+
 # --- 1. GLOBAL APP CONFIGURATION ---
 st.set_page_config(page_title="Satya Professional Data Tricks", layout="wide")
 
