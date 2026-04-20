@@ -4,4 +4,4 @@ io
 zipfile
 sqlite3
 pip cache purge
-pip install --upgrade pip
+py -m pip install --upgrade pip
