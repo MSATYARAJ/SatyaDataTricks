@@ -244,7 +244,10 @@ def multi_key_merger_page():
 
 # --- 4. NAVIGATION & AUTHENTICATION CONTROL ---
 
+# --- 4. NAVIGATION & AUTHENTICATION CONTROL ---
+
 if not st.session_state['logged_in']:
+    # Show Auth screens ONLY (No Sidebar Tools)
     if st.session_state['auth_page'] == 'login':
         st.header("🔐 User Login")
         with st.form("login_form"):
@@ -257,21 +260,28 @@ if not st.session_state['logged_in']:
                     st.rerun()
                 else:
                     st.error("Invalid credentials.")
+        
         c1, c2 = st.columns(2)
-        if c1.button("Create Account"): st.session_state['auth_page'] = 'reg'; st.rerun()
-        if c2.button("Forgot Password?"): st.session_state['auth_page'] = 'reset'; st.rerun()
+        if c1.button("Create Account"): 
+            st.session_state['auth_page'] = 'reg'
+            st.rerun()
+        if c2.button("Forgot Password?"): 
+            st.session_state['auth_page'] = 'reset'
+            st.rerun()
 
     elif st.session_state['auth_page'] == 'reg':
         st.header("📝 Register")
         with st.form("reg_form"):
-            fn, ln, em, pw = st.text_input("First Name"), st.text_input("Last Name"), st.text_input("Email"), st.text_input("Password", type="password")
+            fn, ln, em, pw = st.text_input("First Name"), st.text_input("Last Name"), st.text_input("Email Address"), st.text_input("Password", type="password")
             if st.form_submit_button("Create Account"):
                 if add_user(fn, ln, em, pw):
-                    st.success("Success! Please login.")
-                    st.session_state['auth_page'] = 'login'; st.rerun()
-                else:
-                    st.error("Email already registered.")
-        if st.button("Back to Login"): st.session_state['auth_page'] = 'login'; st.rerun()
+                    st.success("Account created! Please login.")
+                    st.session_state['auth_page'] = 'login'
+                    st.rerun()
+                else: st.error("Email already registered.")
+        if st.button("Back to Login"): 
+            st.session_state['auth_page'] = 'login'
+            st.rerun()
 
     elif st.session_state['auth_page'] == 'reset':
         st.header("🔄 Reset Password")
@@ -283,11 +293,16 @@ if not st.session_state['logged_in']:
                 if new_p != conf_p: st.error("Passwords do not match.")
                 elif update_password(e, new_p):
                     st.success("Password updated!")
-                    st.session_state['auth_page'] = 'login'; st.rerun()
-                else:
-                    st.error("Email not found.")
-        if st.button("Back to Login"): st.session_state['auth_page'] = 'login'; st.rerun()
+                    st.session_state['auth_page'] = 'login'
+                    st.rerun()
+                else: st.error("Email not found.")
+        if st.button("Back to Login"): 
+            st.session_state['auth_page'] = 'login'
+            st.rerun()
+
 else:
+    # --- LOGGED IN: RUN NAVIGATION & TOOLS HERE ---
+    
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['shared_df'] = None
@@ -295,11 +310,12 @@ else:
         st.session_state['auth_page'] = 'login'
         st.rerun()
 
+    # Move these lines inside the 'else' so they are hidden on logout
     pg = st.navigation({
         "Data Tools": [
-            st.Page(merger_page, title="Append Data & Split to Download", icon="📊"),
-            st.Page(audit_page, title="Match Data(Primary Key) & Compare ", icon="🚀"),
-            st.Page(multi_key_merger_page, title="LookUp Data(Advanced) ", icon="🔗"),
+            st.Page(merger_page, title="Merger & Splitter", icon="📊"),
+            st.Page(audit_page, title="Professional Audit", icon="🚀"),
+            st.Page(multi_key_merger_page, title="Advanced Multi-Key Merger", icon="🔗"),
         ]
     })
     pg.run()
