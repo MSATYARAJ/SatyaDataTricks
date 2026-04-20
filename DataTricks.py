@@ -8,13 +8,13 @@ import sqlite3
 import streamlit as st
 
 # 1. Add the Logo to the Sidebar (Standard Streamlit Way)
-st.logo("path/to/your/logo.png", link="https://streamlit.app")
+st.logo("image_cb68b62a.png", link="https://streamlit.app")
 
 # 2. Add the Logo and Tagline to the Main Page
 col1, col2 = st.columns([1, 4])
 
 with col1:
-    st.image("path/to/your/logo.png", width=100) # Adjust width as needed
+    st.image("image_cb68b62a.png",width=100) # Adjust width as needed
 
 with col2:
     st.title("LinkLab")
