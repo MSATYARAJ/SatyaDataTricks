@@ -1,7 +1,5 @@
 streamlit
 xlsxwriter
-io
-zipfile
-sqlite3
-pip cache purge
-py -m pip install --upgrade pip
+pandas
+numpy
+
