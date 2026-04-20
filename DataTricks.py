@@ -14,7 +14,7 @@ st.logo("image_cb68b62a.png", link="https://streamlit.app")
 col1, col2 = st.columns([1, 4])
 
 with col1:
-    st.image("image_cb68b62a.png",width=100) # Adjust width as needed
+    st.image("image_cb68b62a.png",width=200) # Adjust width as needed
 
 with col2:
     st.title("LinkLab")
