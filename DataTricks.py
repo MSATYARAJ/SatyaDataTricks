@@ -313,9 +313,9 @@ else:
     # Move these lines inside the 'else' so they are hidden on logout
     pg = st.navigation({
         "Data Tools": [
-            st.Page(merger_page, title="Merger & Splitter", icon="📊"),
-            st.Page(audit_page, title="Professional Audit", icon="🚀"),
-            st.Page(multi_key_merger_page, title="Advanced Multi-Key Merger", icon="🔗"),
+            st.Page(merger_page, title="Append Data & Split to Download", icon="📊"),
+            st.Page(audit_page, title="Match Data(Primary Key) & Compare ", icon="🚀"),
+            st.Page(multi_key_merger_page, title="LookUp Data(Advanced) ", icon="🔗"),
         ]
     })
     pg.run()
