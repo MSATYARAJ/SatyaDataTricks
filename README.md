@@ -1,2 +1,7 @@
 # SatyaDataTricks
-Business Data Tricks includes Data Appending (Vertically), Data Comparison (Matching Data using Primary Key and then comaparing column-to-column in both the datasets) and Data Merging (LookUp Data based on matching/common columns either single or multiple columns)
+Business Data Tricks includes 
+Initial Registration using your details
+Select Task to be performed
+Data Appending (Vertically),
+Data Comparison (Matching Data using Primary Key and then comaparing column-to-column in both the datasets) and 
+Data Merging (LookUp Data based on matching/common columns either single or multiple columns).
