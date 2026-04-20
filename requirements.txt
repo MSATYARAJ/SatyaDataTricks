@@ -3,3 +3,4 @@ xlsxwriter
 io
 zipfile
 sqlite3
+python -m pip install --upgrade pip
