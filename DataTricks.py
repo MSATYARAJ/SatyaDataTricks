@@ -292,6 +292,7 @@ else:
         st.session_state['logged_in'] = False
         st.session_state['shared_df'] = None
         st.session_state['a1_data'] = None
+        st.session_state['auth_page'] = 'login'
         st.rerun()
 
     pg = st.navigation({
