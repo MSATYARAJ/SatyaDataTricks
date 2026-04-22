@@ -30,7 +30,7 @@ st.markdown("""
         border-left: 5px solid #007bff;
         margin-bottom: 25px;
     }
-    .step-num { color: #007bff; font-weight: bold; margin-right: 5px; }
+    .step-num { color: #ffffff; font-weight: bold; margin-right: 5px; }
     </style>
     """, unsafe_allow_html=True)
 
