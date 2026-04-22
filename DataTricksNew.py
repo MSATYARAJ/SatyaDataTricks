@@ -22,10 +22,11 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] { gap: 20px; border-bottom: 2px solid #e0e0e0; }
     .stTabs [data-baseweb="tab"] { height: 50px; font-weight: 600; font-size: 16px; }
     .stButton>button { border-radius: 4px; font-weight: bold; }
+    .guide-box { background-color: #f0f2f6; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. DATABASE LOGIC ---
+# --- 3. DATABASE ENGINE ---
 class DBManager:
     def __init__(self, db_path='users.db'):
         self.db_path = db_path
@@ -33,7 +34,9 @@ class DBManager:
 
     def _init_db(self):
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, first_name TEXT, email TEXT UNIQUE, password TEXT)''')
+            conn.execute('''CREATE TABLE IF NOT EXISTS users 
+                            (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                             first_name TEXT, email TEXT UNIQUE, password TEXT)''')
 
     def authenticate(self, email, password):
         with sqlite3.connect(self.db_path) as conn:
@@ -54,52 +57,43 @@ class DBManager:
 
 db = DBManager()
 
-# --- 4. DATA PROCESSING UTILITIES ---
+# --- 4. SESSION STATE INITIALIZATION (Prevents AttributeErrors) ---
+if 'logged_in' not in st.session_state: st.session_state.logged_in = False
+if 'auth_mode' not in st.session_state: st.session_state.auth_mode = 'login'
+if 'u_name' not in st.session_state: st.session_state.u_name = ""
+if 'u_email' not in st.session_state: st.session_state.u_email = ""
+
+# --- 5. DATA UTILITIES ---
 @st.cache_data(show_spinner=False)
 def load_data(file):
     return pd.read_csv(file) if file.name.endswith('.csv') else pd.read_excel(file)
 
-# --- 5. PAGE CONTENT FUNCTIONS ---
+# --- 6. TAB CONTENT FUNCTIONS ---
 
 def home_tab():
     st.title("🔬 Welcome to LinkLab")
     st.write("### *The Science of Seamless Data*")
     st.divider()
-
     st.markdown("""
     ### 📖 Platform Guide
-    Welcome to your professional data workspace. Below is a breakdown of your available tools and their specific uses:
-
-    #### 1. 📊 Data Merger (Vertical)
-    *   **Usage:** Stack multiple files (like monthly reports) into one master sheet.
-    *   **Benefit:** Saves hours of manual copy-pasting and ensures row consistency.
-
-    #### 2. 🔍 Audit Tool (Comparison)
-    *   **Usage:** Compare two datasets to find discrepancies, modified values, or missing rows.
-    *   **Benefit:** Ideal for Quality Assurance and tracking data updates between versions.
-
-    #### 3. 🔗 Multi-Key Join (Horizontal)
-    *   **Usage:** Merge columns from two files based on multiple matching criteria.
-    *   **Benefit:** A robust replacement for VLOOKUP when one ID isn't enough to identify a record.
-
-    #### 4. ✂️ Text Splitter (Column Formatting)
-    *   **Usage:** Split long text/descriptions into multiple columns based on a character limit.
-    *   **Benefit:** Essential for uploading data into legacy systems or ERPs with strict character limits per field.
+    Welcome to your professional data workspace. Below is a breakdown of your tools:
+    *   **📊 Data Merger**: Stack multiple reports vertically into one master file.
+    *   **🔍 Audit Tool**: Compare two versions of data to find mismatches or missing rows.
+    *   **🔗 Multi-Key Join**: Link two tables using multiple column matches (Advanced VLOOKUP).
+    *   **✂️ Text Splitter**: Break long text into multiple columns based on character limits.
     """)
 
 def merger_tab():
     st.header("📊 Data Merger & Splitter")
-    with st.expander("🛠️ How to use this tool"):
-        st.write("1. Set the number of files. 2. Upload datasets. 3. Click 'Run Merger'. 4. Download the combined Excel result.")
-    
+    st.info("💡 **How to use:** Upload 2 or more files with the same columns to combine them into one master file.")
     num = st.number_input("Number of files", 2, 20, 2)
-    files = [st.file_uploader(f"Dataset {i+1}", type=["csv", "xlsx"], key=f"merge_{i}") for i in range(num)]
+    files = [st.file_uploader(f"Dataset {i+1}", type=["csv", "xlsx"], key=f"m_{i}") for i in range(num)]
     
     if all(files):
         if st.button("🚀 Run Merger", use_container_width=True):
             dfs = [load_data(f) for f in files]
             res = pd.concat(dfs, axis=0, ignore_index=True).drop_duplicates()
-            st.success("Merge Complete!")
+            st.success(f"Merged {len(res)} unique rows.")
             st.dataframe(res.head(10))
             out = io.BytesIO()
             with pd.ExcelWriter(out, engine='xlsxwriter') as w: res.to_excel(w, index=False)
@@ -107,30 +101,26 @@ def merger_tab():
 
 def audit_tab():
     st.header("🔍 Precision Audit Tool")
-    with st.expander("🛠️ How to use this tool"):
-        st.write("1. Upload Reference and New files. 2. Select Unique Key(s). 3. View mismatches. 4. Fix data based on report.")
-    
+    st.info("💡 **How to use:** Upload a Reference and a New file. Select the Unique Key (e.g. ID) to see what changed.")
     c1, c2 = st.columns(2)
-    with c1: f1 = st.file_uploader("Reference File", type=["csv", "xlsx"], key="aud1")
-    with c2: f2 = st.file_uploader("New File", type=["csv", "xlsx"], key="aud2")
+    with c1: f1 = st.file_uploader("Reference File", type=["csv", "xlsx"], key="a1")
+    with c2: f2 = st.file_uploader("New File", type=["csv", "xlsx"], key="a2")
     
     if f1 and f2:
         df1, df2 = load_data(f1), load_data(f2)
         keys = st.multiselect("Select Unique Key(s):", df1.columns)
-        if st.button("Run Audit") and keys:
+        if st.button("Run Comparison") and keys:
             merged = pd.merge(df1, df2, on=keys, how='outer', indicator=True)
             diffs = merged[merged['_merge'] != 'both']
-            st.metric("Mismatches Found", len(diffs))
+            st.metric("Discrepancies Found", len(diffs))
             st.dataframe(diffs)
 
 def join_tab():
     st.header("🔗 Multi-Key Join")
-    with st.expander("🛠️ How to use this tool"):
-        st.write("1. Load Base and Lookup tables. 2. Select matching keys for both. 3. Join columns horizontally.")
-    
+    st.info("💡 **How to use:** Upload two tables and select the columns that match in both to pull data horizontally.")
     c1, c2 = st.columns(2)
-    with c1: l_file = st.file_uploader("Base Table", type=["csv", "xlsx"], key="join1")
-    with c2: r_file = st.file_uploader("Lookup Table", type=["csv", "xlsx"], key="join2")
+    with c1: l_file = st.file_uploader("Base Table", type=["csv", "xlsx"], key="j1")
+    with c2: r_file = st.file_uploader("Lookup Table", type=["csv", "xlsx"], key="j2")
     
     if l_file and r_file:
         ldf, rdf = load_data(l_file), load_data(r_file)
@@ -138,89 +128,97 @@ def join_tab():
         rk = st.multiselect("Lookup Keys:", rdf.columns)
         if st.button("🔗 Execute Join") and len(lk) == len(rk) > 0:
             res = pd.merge(ldf, rdf, left_on=lk, right_on=rk, how='left')
-            st.dataframe(res.head())
+            st.success("Join Successful!")
+            st.dataframe(res.head(10))
 
 def splitter_tab():
     st.header("✂️ Text Column Splitter")
-    with st.expander("🛠️ How to use this tool"):
-        st.write("1. Upload file. 2. Set 'Max Characters' (e.g., 50). 3. Select text column. 4. 'Generate' to split long sentences into Part_1, Part_2, etc.")
-
+    st.info("💡 **How to use:** Set a character limit and select a column. The tool splits long text into 'Part_1', 'Part_2', etc.")
     max_len = st.number_input("Max Characters per Column", 1, 500, 50)
-    up_file = st.file_uploader("Upload File to Split", type=["csv", "xlsx"], key="split_uploader")
-
+    up_file = st.file_uploader("Upload File to Split", type=["csv", "xlsx"], key="s1")
+    
     if up_file:
         df = load_data(up_file)
-        col_to_split = st.selectbox("Select column to process:", df.columns)
-        
+        col = st.selectbox("Select Text Column:", df.columns)
         if st.button("Generate New Columns", type="primary"):
-            def split_to_chunks(text, m_len):
-                return textwrap.wrap(str(text), width=m_len, break_long_words=False) if pd.notna(text) else []
-            
-            chunks = df[col_to_split].apply(lambda x: split_to_chunks(x, max_len))
+            def wrap_text(t, m): return textwrap.wrap(str(t), width=m, break_long_words=False) if pd.notna(t) else []
+            chunks = df[col].apply(lambda x: wrap_text(x, max_len))
             new_cols = pd.DataFrame(chunks.tolist())
             new_cols.columns = [f"Part_{i+1}" for i in range(new_cols.shape[1])]
             df_final = pd.concat([df, new_cols], axis=1)
-            
-            st.success("Successfully processed!")
-            st.dataframe(df_final.head(20))
-            
+            st.success("Successfully split text!")
+            st.dataframe(df_final.head(10))
             buf = io.BytesIO()
             with pd.ExcelWriter(buf, engine='xlsxwriter') as w: df_final.to_excel(w, index=False)
-            st.download_button("📥 Download Results", buf.getvalue(), "text_split_results.xlsx")
+            st.download_button("📥 Download Split Results", buf.getvalue(), "split_results.xlsx")
 
-# --- 6. AUTHENTICATION LOGIC ---
-
-if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-if 'auth_mode' not in st.session_state: st.session_state.auth_mode = 'login'
+# --- 7. AUTHENTICATION LOGIC ---
 
 if not st.session_state.logged_in:
-    _, center, _ = st.columns()
+    _, center, _ = st.columns([1, 2, 1])
     with center:
+        if os.path.exists("image_cb68b62a.png"): st.image("image_cb68b62a.png", width=120)
+        else: st.title("🔬 LinkLab")
+        
         if st.session_state.auth_mode == 'login':
-            st.header("LinkLab Login")
+            st.header("Login")
             em = st.text_input("Email")
             pw = st.text_input("Password", type="password")
             if st.button("Login", use_container_width=True, type="primary"):
-                user = db.authenticate(em, pw)
-                if user:
+                user_record = db.authenticate(em, pw)
+                if user_record:
                     st.session_state.logged_in = True
-                    st.session_state.u_name = user[0]
-                    st.session_state.u_email = user[1]
+                    st.session_state.u_name = user_record[0]  # First Name
+                    st.session_state.u_email = user_record[1] # Email
                     st.rerun()
-                else: st.error("Access Denied.")
-            if st.button("Forgot Password?"): st.session_state.auth_mode = 'forgot'; st.rerun()
-            if st.button("Register"): st.session_state.auth_mode = 'register'; st.rerun()
-        # ... (register and forgot UI logic similar to previous versions) ...
+                else: st.error("Invalid credentials.")
+            
+            c1, c2 = st.columns(2)
+            if c1.button("Forgot Password?"): st.session_state.auth_mode = 'forgot'; st.rerun()
+            if c2.button("Register Account"): st.session_state.auth_mode = 'register'; st.rerun()
+
         elif st.session_state.auth_mode == 'register':
+            st.header("Register")
             fn = st.text_input("First Name")
-            em = st.text_input("Email")
+            em = st.text_input("Email Address")
             pw = st.text_input("Password", type="password")
-            if st.button("Create Account"):
-                if db.add_user(fn, em, pw): st.session_state.auth_mode = 'login'; st.rerun()
-            if st.button("Back"): st.session_state.auth_mode = 'login'; st.rerun()
+            if st.button("Create Account", use_container_width=True, type="primary"):
+                if db.add_user(fn, em, pw):
+                    st.success("Account created! Please login.")
+                    st.session_state.auth_mode = 'login'; st.rerun()
+                else: st.error("Email already exists.")
+            if st.button("Back to Login"): st.session_state.auth_mode = 'login'; st.rerun()
+
         elif st.session_state.auth_mode == 'forgot':
-            em = st.text_input("Email")
-            fn = st.text_input("First Name")
-            np = st.text_input("New PW", type="password")
-            if st.button("Reset"):
-                if db.reset_password(em, fn, np): st.session_state.auth_mode = 'login'; st.rerun()
+            st.header("Reset Password")
+            em = st.text_input("Registered Email")
+            fn = st.text_input("Confirm First Name")
+            np = st.text_input("New Password", type="password")
+            if st.button("Update Password", use_container_width=True, type="primary"):
+                if db.reset_password(em, fn, np):
+                    st.success("Password updated! Please login.")
+                    st.session_state.auth_mode = 'login'; st.rerun()
+                else: st.error("Verification failed.")
             if st.button("Back"): st.session_state.auth_mode = 'login'; st.rerun()
 
 else:
-    # --- APP INTERFACE ---
-    cl, cr = st.columns(2)
-    with cl: st.write(f"### LinkLab | 👋 {st.session_state.u_name}")
+    # --- APP INTERFACE (POST-LOGIN) ---
+    cl, cr = st.columns([4, 1])
+    with cl: st.write(f"### LinkLab | 👋 Welcome, {st.session_state.u_name}")
     with cr:
         with st.popover("👤 Account"):
-            st.write(f"Email: {st.session_state.u_email}")
+            st.write(f"Logged in as: **{st.session_state.u_email}**")
             if st.button("Logout", use_container_width=True):
                 st.session_state.logged_in = False
                 st.rerun()
 
-    # TABS
-    tabs = st.tabs(["🏠 Home", "📊 Data Merger", "🔍 Audit Tool", "🔗 Join Tool", "✂️ Text Splitter"])
-    with tabs[0]: home_tab()
-    with tabs[1]: merger_tab()
-    with tabs[2]: audit_tab()
-    with tabs[3]: join_tab()
-    with tabs[4]: splitter_tab()
+    # Define Horizontal Navigation Tabs
+    t_home, t_merger, t_audit, t_join, t_split = st.tabs([
+        "🏠 Home", "📊 Merger", "🔍 Audit", "🔗 Join", "✂️ Splitter"
+    ])
+
+    with t_home: home_tab()
+    with t_merger: merger_tab()
+    with t_audit: audit_tab()
+    with t_join: join_tab()
+    with t_split: splitter_tab()
