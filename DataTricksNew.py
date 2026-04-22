@@ -148,7 +148,7 @@ else:
     with t1: st.write("Welcome to your dashboard.")
     with t2: st.write("Upload files to merge...")
     with t3: st.write("Run data comparisons...")
-   st.session_state['logged_in'] = False
+    st.session_state['logged_in'] = False
             st.rerun()
 
     if page == "Home": home_page()
