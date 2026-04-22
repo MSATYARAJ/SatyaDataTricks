@@ -149,7 +149,7 @@ else:
     with t2: st.write("Upload files to merge...")
     with t3: st.write("Run data comparisons...")
     st.session_state['logged_in'] = False
-            st.rerun()
+    st.rerun()
 
     if page == "Home": home_page()
     elif page == "Data Merger": merger_page()
