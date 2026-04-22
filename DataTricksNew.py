@@ -24,7 +24,7 @@ st.markdown("""
     .stButton>button { border-radius: 4px; font-weight: bold; }
     /* Professional Guide Box */
     .guide-box { 
-        background-color: #e2f2fd; 
+        background-color: #007bff; 
         padding: 20px; 
         border-radius: 10px; 
         border-left: 5px solid #007bff;
