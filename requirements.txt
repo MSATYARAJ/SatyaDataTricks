@@ -3,4 +3,4 @@ xlsxwriter
 pandas
 numpy
 openpyxl
-pyhton-Calamine
+pyhton-calamine
