@@ -6,7 +6,7 @@ import sqlite3
 import os
 import textwrap
 import zipfile
-from python_calamine import CalamineWorkbook
+from python-calamine import CalamineWorkbook
 
 # --- 1. GLOBAL CONFIGURATION ---
 st.set_page_config(
