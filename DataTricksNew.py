@@ -252,7 +252,7 @@ if not st.session_state.logged_in:
 
 else:
     # --- APP INTERFACE ---
-    cl, cr = st.columns(2)
+    cl, cr = st.columns([4,1])
     with cl: st.write(f"### LinkLab | 👋 Welcome, {st.session_state.u_name}")
     with cr:
         with st.popover("👤 Profile"):
