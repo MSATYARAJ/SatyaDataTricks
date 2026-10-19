@@ -1,6 +1,6 @@
-streamlit
-xlsxwriter
-pandas
+streamlit>=1.50
+pandas>=2.2
 numpy
-openpyxl
-python_calamine
+pyarrow
+python-calamine
+xlsxwriter
